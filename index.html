@@ -9,6 +9,7 @@
       color: #fff;
       font-family: sans-serif;
       text-align: center;
+      margin: 0;
     }
     canvas {
       background: #222;
@@ -18,12 +19,40 @@
     #score {
       font-size: 20px;
     }
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px;
+    }
+    .controls button {
+      font-size: 18px;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #444;
+      color: white;
+      cursor: pointer;
+    }
+    .controls button:active {
+      background: #666;
+    }
   </style>
 </head>
 <body>
   <h1>テトリス</h1>
   <p id="score">スコア: 0 / ハイスコア: 0</p>
   <canvas id="game" width="240" height="400"></canvas>
+
+  <!-- モバイル向け操作ボタン -->
+  <div class="controls">
+    <button onclick="playerMove(-1)">← 左</button>
+    <button onclick="playerDrop()">↓ 下</button>
+    <button onclick="playerMove(1)">→ 右</button>
+    <button onclick="playerRotate(1)">⟳ 回転</button>
+  </div>
+
   <script>
     const canvas = document.getElementById('game');
     const context = canvas.getContext('2d');
@@ -40,9 +69,7 @@
 
     function createMatrix(w, h) {
       const matrix = [];
-      while (h--) {
-        matrix.push(new Array(w).fill(0));
-      }
+      while (h--) matrix.push(new Array(w).fill(0));
       return matrix;
     }
 
@@ -111,7 +138,7 @@
         arenaSweep();
         updateScore();
       }
-      dropCounter = 0;
+      draw(); // 毎回明示的に描画
     }
 
     function playerMove(dir) {
@@ -119,6 +146,7 @@
       if (collide(arena, player)) {
         player.pos.x -= dir;
       }
+      draw();
     }
 
     function playerReset() {
@@ -131,6 +159,7 @@
         player.score = 0;
         updateScore();
       }
+      draw();
     }
 
     function playerRotate(dir) {
@@ -146,6 +175,7 @@
           return;
         }
       }
+      draw();
     }
 
     function arenaSweep() {
@@ -163,7 +193,8 @@
     }
 
     function updateScore() {
-      document.getElementById('score').textContent = `スコア: ${player.score} / ハイスコア: ${Math.max(player.score, highScore)}`;
+      document.getElementById('score').textContent =
+        `スコア: ${player.score} / ハイスコア: ${Math.max(player.score, highScore)}`;
       if (player.score > highScore) {
         highScore = player.score;
         localStorage.setItem('tetrisHighScore', highScore);
@@ -177,21 +208,7 @@
       drawMatrix(player.matrix, player.pos);
     }
 
-    let dropCounter = 0;
-    let dropInterval = 1000;
-    let lastTime = 0;
-
-    function update(time = 0) {
-      const deltaTime = time - lastTime;
-      lastTime = time;
-      dropCounter += deltaTime;
-      if (dropCounter > dropInterval) {
-        playerDrop();
-      }
-      draw();
-      requestAnimationFrame(update);
-    }
-
+    // キーボード操作対応（PC用）
     document.addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft') playerMove(-1);
       else if (event.key === 'ArrowRight') playerMove(1);
@@ -202,7 +219,7 @@
 
     playerReset();
     updateScore();
-    update();
+    draw(); // 初期描画
   </script>
 </body>
 </html>
