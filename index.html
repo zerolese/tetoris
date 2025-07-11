@@ -276,26 +276,27 @@
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (!data.arena || !data.player) throw "形式不正";
-          for (let y = 0; y < arena.length; y++) {
-            arena[y] = data.arena[y].slice();
-          }
-          player.matrix = data.player.matrix;
-          player.pos = {...data.player.pos};
-          player.score = data.player.score;
-          highScore = data.highScore || 0;
-          updateScore();
-          draw();
-          alert('ロード成功');
-        } catch {
-          alert('読み込み失敗：ファイル形式が不正です');
-        }
-      };
-      reader.readAsText(file);
-    });
+reader.onload = function (e) {
+  try {
+    const data = JSON.parse(e.target.result);
+    if (!data.arena || !data.player) throw "形式不正";
+    for (let y = 0; y < arena.length; y++) {
+      arena[y] = data.arena[y].slice();
+    }
+    player.matrix = data.player.matrix;
+    player.pos = {...data.player.pos};
+    player.score = data.player.score;
+    highScore = data.highScore || 0;
+
+    updateScore();
+    draw();
+    playerReset(); // ← 追加：リセットして安定した状態に戻す
+    alert('ロード成功');
+  } catch {
+    alert('読み込み失敗：ファイル形式が不正です');
+  }
+};
+
 
     document.addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft') playerMove(-1);
