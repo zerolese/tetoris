@@ -22,29 +22,60 @@
     }
     #score {
       font-size: 20px;
+      margin-bottom: 8px;
     }
-    .controls {
+
+    /* セーブ・ロードボタン（画面上） */
+    .top-buttons {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
       gap: 10px;
-      margin: 10px;
-      padding: 0 10px;
+      margin: 10px auto;
     }
-    .controls button {
-      font-size: 16px;
-      padding: 12px 16px;
+    .top-buttons button {
+      font-size: 14px;
+      padding: 10px 16px;
       border: none;
       border-radius: 10px;
       background: #444;
       color: white;
       cursor: pointer;
-      flex: 1 1 30%;
-      max-width: 140px;
     }
-    .controls button:active {
+    .top-buttons button:active {
       background: #666;
     }
+
+    /* 左下の丸ボタン配置 */
+    .controls {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      display: grid;
+      grid-template-areas:
+        "up"
+        "left down right"
+        "rotate";
+      gap: 10px;
+    }
+    .controls button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 20px;
+      border: none;
+      background: #555;
+      color: white;
+      cursor: pointer;
+    }
+    .controls button:active {
+      background: #777;
+    }
+    .controls button[aria-label="up"] { grid-area: up; }
+    .controls button[aria-label="down"] { grid-area: down; }
+    .controls button[aria-label="left"] { grid-area: left; }
+    .controls button[aria-label="right"] { grid-area: right; }
+    .controls button[aria-label="rotate"] { grid-area: rotate; }
+
     #loadFileInput {
       display: none;
     }
@@ -52,18 +83,20 @@
 </head>
 <body>
   <h1>テトリス</h1>
+  <div class="top-buttons">
+    <button onclick="downloadSave()">💾 セーブ</button>
+    <button onclick="document.getElementById('loadFileInput').click()">📂 ロード</button>
+  </div>
   <p id="score">スコア: 0 / ハイスコア: 0</p>
   <canvas id="game" width="240" height="400"></canvas>
 
-  <!-- 操作ボタン -->
+  <!-- 丸いキー（左下） -->
   <div class="controls">
-    <button onclick="playerMove(-1)">← 左</button>
-    <button onclick="playerDrop()">↓ 下</button>
-    <button onclick="playerMove(1)">→ 右</button>
-    <button onclick="playerRotate(1)">⟳ 回転</button>
-    <button onclick="playerUp()">↑ 上</button>
-    <button onclick="downloadSave()">💾 セーブDL</button>
-    <button onclick="document.getElementById('loadFileInput').click()">📂 ロード</button>
+    <button aria-label="up" onclick="playerUp()">↑</button>
+    <button aria-label="left" onclick="playerMove(-1)">←</button>
+    <button aria-label="down" onclick="playerDrop()">↓</button>
+    <button aria-label="right" onclick="playerMove(1)">→</button>
+    <button aria-label="rotate" onclick="playerRotate(1)">⟳</button>
   </div>
 
   <input type="file" id="loadFileInput" accept=".json" />
@@ -228,13 +261,8 @@
       drawMatrix(player.matrix, player.pos);
     }
 
-    // セーブをJSONファイルとしてダウンロード
     function downloadSave() {
-      const data = {
-        arena,
-        player,
-        highScore,
-      };
+      const data = { arena, player, highScore };
       const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -244,7 +272,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // ロード：ファイル選択
     document.getElementById('loadFileInput').addEventListener('change', function (event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -270,7 +297,6 @@
       reader.readAsText(file);
     });
 
-    // キーボード操作対応（PC用）
     document.addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft') playerMove(-1);
       else if (event.key === 'ArrowRight') playerMove(1);
