@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>テトリス</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
   <style>
     body {
       background: #111;
@@ -10,33 +11,42 @@
       font-family: sans-serif;
       text-align: center;
       margin: 0;
+      user-select: none;
+      touch-action: manipulation;
     }
     canvas {
       background: #222;
       display: block;
       margin: 20px auto;
+      touch-action: none;
     }
     #score {
       font-size: 20px;
     }
     .controls {
       display: flex;
-      justify-content: center;
       flex-wrap: wrap;
+      justify-content: center;
       gap: 10px;
       margin: 10px;
+      padding: 0 10px;
     }
     .controls button {
-      font-size: 18px;
-      padding: 15px 20px;
+      font-size: 16px;
+      padding: 12px 16px;
       border: none;
       border-radius: 10px;
       background: #444;
       color: white;
       cursor: pointer;
+      flex: 1 1 30%;
+      max-width: 140px;
     }
     .controls button:active {
       background: #666;
+    }
+    #loadFileInput {
+      display: none;
     }
   </style>
 </head>
@@ -45,13 +55,18 @@
   <p id="score">スコア: 0 / ハイスコア: 0</p>
   <canvas id="game" width="240" height="400"></canvas>
 
-  <!-- モバイル向け操作ボタン -->
+  <!-- 操作ボタン -->
   <div class="controls">
     <button onclick="playerMove(-1)">← 左</button>
     <button onclick="playerDrop()">↓ 下</button>
     <button onclick="playerMove(1)">→ 右</button>
     <button onclick="playerRotate(1)">⟳ 回転</button>
+    <button onclick="playerUp()">↑ 上</button>
+    <button onclick="downloadSave()">💾 セーブDL</button>
+    <button onclick="document.getElementById('loadFileInput').click()">📂 ロード</button>
   </div>
+
+  <input type="file" id="loadFileInput" accept=".json" />
 
   <script>
     const canvas = document.getElementById('game');
@@ -122,11 +137,8 @@
           [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
         }
       }
-      if (dir > 0) {
-        matrix.forEach(row => row.reverse());
-      } else {
-        matrix.reverse();
-      }
+      if (dir > 0) matrix.forEach(row => row.reverse());
+      else matrix.reverse();
     }
 
     function playerDrop() {
@@ -138,13 +150,21 @@
         arenaSweep();
         updateScore();
       }
-      draw(); // 毎回明示的に描画
+      draw();
     }
 
     function playerMove(dir) {
       player.pos.x += dir;
       if (collide(arena, player)) {
         player.pos.x -= dir;
+      }
+      draw();
+    }
+
+    function playerUp() {
+      player.pos.y--;
+      if (collide(arena, player)) {
+        player.pos.y++;
       }
       draw();
     }
@@ -208,18 +228,61 @@
       drawMatrix(player.matrix, player.pos);
     }
 
+    // セーブをJSONファイルとしてダウンロード
+    function downloadSave() {
+      const data = {
+        arena,
+        player,
+        highScore,
+      };
+      const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "tetris-save.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ロード：ファイル選択
+    document.getElementById('loadFileInput').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.arena || !data.player) throw "形式不正";
+          for (let y = 0; y < arena.length; y++) {
+            arena[y] = data.arena[y].slice();
+          }
+          player.matrix = data.player.matrix;
+          player.pos = {...data.player.pos};
+          player.score = data.player.score;
+          highScore = data.highScore || 0;
+          updateScore();
+          draw();
+          alert('ロード成功');
+        } catch {
+          alert('読み込み失敗：ファイル形式が不正です');
+        }
+      };
+      reader.readAsText(file);
+    });
+
     // キーボード操作対応（PC用）
     document.addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft') playerMove(-1);
       else if (event.key === 'ArrowRight') playerMove(1);
       else if (event.key === 'ArrowDown') playerDrop();
+      else if (event.key === 'ArrowUp') playerUp();
       else if (event.key === 'q') playerRotate(-1);
       else if (event.key === 'w') playerRotate(1);
     });
 
     playerReset();
     updateScore();
-    draw(); // 初期描画
+    draw();
   </script>
 </body>
 </html>
