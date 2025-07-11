@@ -25,7 +25,6 @@
       margin-bottom: 8px;
     }
 
-    /* セーブ・ロードボタン（画面上） */
     .top-buttons {
       display: flex;
       justify-content: center;
@@ -45,7 +44,6 @@
       background: #666;
     }
 
-    /* 左下の丸ボタン配置 */
     .controls {
       position: fixed;
       bottom: 10px;
@@ -90,7 +88,6 @@
   <p id="score">スコア: 0 / ハイスコア: 0</p>
   <canvas id="game" width="240" height="400"></canvas>
 
-  <!-- 丸いキー（左下） -->
   <div class="controls">
     <button aria-label="up" onclick="playerUp()">↑</button>
     <button aria-label="left" onclick="playerMove(-1)">←</button>
@@ -274,29 +271,29 @@
 
     document.getElementById('loadFileInput').addEventListener('change', function (event) {
       const file = event.target.files[0];
-      if (!file) return;
+      if (!file) return;https://github.com/zerolese/tetoris/edit/main/index.html
       const reader = new FileReader();
-reader.onload = function (e) {
-  try {
-    const data = JSON.parse(e.target.result);
-    if (!data.arena || !data.player) throw "形式不正";
-    for (let y = 0; y < arena.length; y++) {
-      arena[y] = data.arena[y].slice();
-    }
-    player.matrix = data.player.matrix;
-    player.pos = {...data.player.pos};
-    player.score = data.player.score;
-    highScore = data.highScore || 0;
-
-    updateScore();
-    draw();
-    playerReset(); // ← 追加：リセットして安定した状態に戻す
-    alert('ロード成功');
-  } catch {
-    alert('読み込み失敗：ファイル形式が不正です');
-  }
-};
-
+      reader.onload = function (e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.arena || !data.player) throw "形式不正";
+          for (let y = 0; y < arena.length; y++) {
+            arena[y] = data.arena[y].slice();
+          }
+          player.matrix = data.player.matrix;
+          player.pos = {...data.player.pos};
+          player.score = data.player.score;
+          highScore = data.highScore || 0;
+          updateScore();
+          draw();
+          playerReset(); // ← 描画と状態を安定化
+          alert('ロード成功');
+        } catch {
+          alert('読み込み失敗：ファイル形式が不正です');
+        }
+      };
+      reader.readAsText(file);
+    });
 
     document.addEventListener('keydown', event => {
       if (event.key === 'ArrowLeft') playerMove(-1);
